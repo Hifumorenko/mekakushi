@@ -147,10 +147,30 @@ def _eyes_for_face(fx0, fy0, fx1, fy1, all_eye_centers, if_faces):
 # Drawing
 # ---------------------------------------------------------------------------
 
-def _rotated_rect(img, cx, cy, w, h, angle_deg, color):
+def _solid_bar(img, cx, cy, w, h, angle_deg, color):
     box = cv2.boxPoints(((float(cx), float(cy)), (float(w), float(h)), float(angle_deg)))
-    pts = np.intp(box)
-    cv2.fillPoly(img, [pts], color)
+    cv2.fillPoly(img, [np.intp(box)], color)
+
+
+def _marker_bar(img, cx, cy, w, h, angle_deg, color, n_strokes=4):
+    """Fill the bar as n_strokes overlapping ellipses (circular marker motion)."""
+    rng = np.random.default_rng()
+    angle_rad = np.radians(angle_deg)
+    cos_a, sin_a = np.cos(angle_rad), np.sin(angle_rad)
+
+    for _ in range(n_strokes):
+        lx = rng.uniform(-w * 0.10, w * 0.10)
+        ly = rng.uniform(-h * 0.10, h * 0.10)
+        gcx = int(cx + lx * cos_a - ly * sin_a)
+        gcy = int(cy + lx * sin_a + ly * cos_a)
+
+        axes = (
+            max(1, int(w / 2 * rng.uniform(0.88, 1.12))),
+            max(1, int(h / 2 * rng.uniform(0.88, 1.12))),
+        )
+        ell_angle = angle_deg + rng.uniform(-8, 8)
+
+        cv2.ellipse(img, (gcx, gcy), axes, ell_angle, 0, 360, color, -1)
 
 
 # ---------------------------------------------------------------------------
@@ -161,7 +181,7 @@ _EYE_TOP = 0.34
 _EYE_BOT = 0.54
 
 
-def process(img_bgr, eye_top, eye_bot, pad_x, pad_y, bar_color):
+def process(img_bgr, eye_top, eye_bot, pad_x, pad_y, bar_color, marker=False, n_strokes=4):
     h, w = img_bgr.shape[:2]
     pil = Image.fromarray(cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB))
 
@@ -212,7 +232,10 @@ def process(img_bgr, eye_top, eye_bot, pad_x, pad_y, bar_color):
             center = np.array([(fx0 + fx1) / 2, fy0 + fh * (eye_top + eye_bot) / 2])
             angle = 0.0
 
-        _rotated_rect(out, center[0], center[1], bar_w, bar_h, angle, bar_color)
+        if marker:
+            _marker_bar(out, center[0], center[1], bar_w, bar_h, angle, bar_color, n_strokes)
+        else:
+            _solid_bar(out, center[0], center[1], bar_w, bar_h, angle, bar_color)
 
     return out
 
@@ -224,14 +247,15 @@ def process(img_bgr, eye_top, eye_bot, pad_x, pad_y, bar_color):
 IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".webp", ".bmp", ".tiff", ".tif"}
 
 
-def process_file(src, dst, bar_color, eye_top, eye_bot, pad_x, pad_y):
+def process_file(src, dst, bar_color, eye_top, eye_bot, pad_x, pad_y, marker=False, n_strokes=4):
     img = cv2.imread(str(src))
     if img is None:
         print(f"[skip] cannot read {src}")
         return False
 
     result = process(img, eye_top=eye_top, eye_bot=eye_bot,
-                     pad_x=pad_x, pad_y=pad_y, bar_color=bar_color)
+                     pad_x=pad_x, pad_y=pad_y, bar_color=bar_color,
+                     marker=marker, n_strokes=n_strokes)
 
     ok = cv2.imwrite(str(dst), result)
     if not ok:
@@ -247,6 +271,8 @@ def main():
     parser.add_argument("input",  help="Image file or input directory")
     parser.add_argument("output", help="Output file or output directory")
     parser.add_argument("--verbose", "-v", action="store_true", help="Print detection details")
+    parser.add_argument("--marker", action="store_true", help="Draw as overlapping hand-drawn ellipses instead of a solid rectangle")
+    parser.add_argument("--strokes", type=int, default=None, help="Number of marker passes; implies --marker (default: 4)")
     parser.add_argument("--color", default="0,0,0", help="Bar colour R,G,B (default: black)")
     parser.add_argument("--pad-x", type=int, default=6)
     parser.add_argument("--pad-y", type=int, default=2)
@@ -277,7 +303,9 @@ def main():
         eye_top=args.eye_top,
         eye_bot=args.eye_bot,
         pad_x=args.pad_x,
-        pad_y=args.pad_y
+        pad_y=args.pad_y,
+        marker=args.marker or (args.strokes is not None),
+        n_strokes=args.strokes if args.strokes is not None else 4,
     )
 
     src = Path(args.input)

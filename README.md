@@ -4,9 +4,10 @@
 
 Draws a rotated black bar over the eyes of anime faces. Works with multiple characters in a single image.
 
-| Before | After |
-|---|---|
-| ![before](examples/before.webp) | ![after](examples/after.webp) |
+Solid rectangle:
+| Before | After | After marker |
+|---|---|---|
+| ![before](examples/before.webp) | ![after](examples/after.webp) | ![after marker](examples/after_marker.webp) |
 
 *Illustration by [@km83305315](https://x.com/km83305315)*
 
@@ -29,6 +30,8 @@ uv run main.py ./input/ ./output/
 | Flag | Default | Effect |
 |---|---|---|
 | `--color R,G,B` | `0,0,0` | Bar colour |
+| `--marker` | off | Draw as overlapping hand-drawn ellipses instead of a solid rectangle |
+| `--strokes N` | `4` | Number of marker passes (implies `--marker`) |
 | `--pad-x N` | `6` | Extra pixels left/right beyond face |
 | `--pad-y N` | `2` | Extra pixels above/below eye region |
 | `--eye-top F` | `0.34` | Top of bar as fraction of face height (fallback only) |

@@ -34,7 +34,10 @@ Everything lives in `main.py` — a single uv inline script.
 
 **Rotation:** `angle = arctan2(re.y - le.y, re.x - le.x)` in y-down image space. Passed directly to `cv2.boxPoints` — no negation. Both conventions agree: positive = clockwise tilt.
 
-**Drawing:** `cv2.boxPoints` generates the four corners of the rotated rectangle; `cv2.fillPoly` fills it.
+**Drawing:** Two modes controlled by `--marker`:
+
+- **Solid (default)** — `_solid_bar`: `cv2.boxPoints` + `cv2.fillPoly`, clean filled rectangle.
+- **Marker (`--marker`)** — `_marker_bar`: `n_strokes` overlapping filled ellipses, each fitted to the bar's dimensions with a slightly jittered centre (±10 % of bar size in local coordinates), randomised axes (±12 %), and a small random tilt on top of the bar's rotation angle. Produces curved, non-rectangular edges. Passing `--strokes` implies `--marker`.
 
 ## Key parameters
 
@@ -45,6 +48,8 @@ Everything lives in `main.py` — a single uv inline script.
 | `--pad-x` | 6 | Extra pixels left/right beyond face bbox |
 | `--pad-y` | 2 | Extra pixels above/below eye region |
 | `--color` | `0,0,0` | Bar colour as `R,G,B` |
+| `--marker` | off | Draw as overlapping hand-drawn ellipses instead of a solid rectangle |
+| `--strokes` | 4 | Number of marker passes; requires `--marker` |
 | `--verbose` / `-v` | off | Print face/eye detection details per image |
 
 ## Noise suppression
