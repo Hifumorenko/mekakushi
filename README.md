@@ -33,6 +33,7 @@ uv run main.py ./input/ ./output/
 | `--pad-y N` | `2` | Extra pixels above/below eye region |
 | `--eye-top F` | `0.34` | Top of bar as fraction of face height (fallback only) |
 | `--eye-bot F` | `0.54` | Bottom of bar as fraction of face height (fallback only) |
+| `--verbose` / `-v` | off | Print face/eye detection details per image |
 
 ## How it works
 
