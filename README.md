@@ -4,7 +4,6 @@
 
 Draws a rotated black bar over the eyes of anime faces. Works with multiple characters in a single image.
 
-Solid rectangle:
 | Before | After | After marker |
 |---|---|---|
 | ![before](examples/before.webp) | ![after](examples/after.webp) | ![after marker](examples/after_marker.webp) |
